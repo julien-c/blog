@@ -96,7 +96,7 @@
        • <span class="read-time" title="Estimated read time">
     
     
-      1 min read
+      2 min read
     
 </span></p>
 
@@ -136,46 +136,34 @@
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Introduction">Introduction<a class="anchor-link" href="#Introduction"> </a></h3>
+<h2 id="Introduction">Introduction<a class="anchor-link" href="#Introduction"> </a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="-"> <a class="anchor-link" href="#-"> </a></h3>
+<h2 id="History-of-ZSL-and-its-meaning">History of ZSL and its meaning<a class="anchor-link" href="#History-of-ZSL-and-its-meaning"> </a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="A-Ready-made-Zero-Shot-Text-Classifier">A Ready-made Zero-Shot Text Classifier<a class="anchor-link" href="#A-Ready-made-Zero-Shot-Text-Classifier"> </a></h3><p>Recently <a href="https://arxiv.org/abs/1909.00161">Yin et al.</a> proposed a method which uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box text/label compatibility function.</p>
-<p>Natural Language Inference (NLI) considers two sentences: a "premise" and a "hypothesis". The task is to determine whether the hypothesis is true (entailment) given the hypothesis. The following example comes from <a href="http://nlpprogress.com/english/natural_language_inference.html">NLP Progress</a>.</p>
-<table>
-<thead><tr>
-<th>Premise</th>
-<th>Label</th>
-<th>Hypothesis</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>A man inspects the uniform of a figure in some East Asian country.</td>
-<td>contradiction</td>
-<td>The man is sleeping.</td>
-</tr>
-<tr>
-<td>An older and younger man smiling.</td>
-<td>neutral</td>
-<td>Two men are smiling and laughing at the cats playing on the floor.</td>
-</tr>
-<tr>
-<td>A soccer game with multiple males playing.</td>
-<td>entailment</td>
-<td>Some men are playing a sport.</td>
-</tr>
-</tbody>
-</table>
-<p>The idea is to take the sequence as the "premise" and turn each possible label into a "hypothesis." If the model says that the premise "entails" the hypothesis, we take the label to be true. This gives us a ready-made compatibility function that works reasonably well on certain tasks without any task-specific training. See the code snippet below to see how easily this can be done with 🤗 Transformers.</p>
+<h2 id="Methods-and-Uses-in-NLP">Methods and Uses in NLP<a class="anchor-link" href="#Methods-and-Uses-in-NLP"> </a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="&quot;Zero-shot&quot;-as-an-Evaluation-Technique">"Zero-shot" as an Evaluation Technique<a class="anchor-link" href="#&quot;Zero-shot&quot;-as-an-Evaluation-Technique"> </a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="A-ready-made,-actually-useful-ZSL-classifier">A ready-made, actually useful ZSL classifier<a class="anchor-link" href="#A-ready-made,-actually-useful-ZSL-classifier"> </a></h3><p>Recently, <a href="https://arxiv.org/abs/1909.00161">Yin et al.</a> proposed a method which uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well.</p>
+<p>As some quick background, Natural Language Inference (NLI) considers two sentences: a "premise" and a "hypothesis". The task is to determine whether the hypothesis is true (entailment) or false (contradiction) given the premise.</p>
+<p><img src="https://i.ibb.co/gWCjvdP/Screen-Shot-2020-05-26-at-5-10-07-PM.png" alt="example NLI sentences" title="NLI Examples from [NLP Progress](http://nlpprogress.com/english/natural_language_inference.html)" /></p>
+<p>The idea is to take the sequence we're interested in labeling as the "premise" and to turn each candidate label into a "hypothesis." If the model says that the premise "entails" the hypothesis, we take the label to be true. This gives us a ready-made compatibility function that works reasonably well on certain tasks without any task-specific training. See the code snippet below to see how easily this can be done with 🤗 Transformers.</p>
 
 </div>
 </div>
@@ -196,7 +184,7 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">BartForSequenceClassification</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;bart-large-mnli&#39;</span><span class="p">)</span>
 
 <span class="c1"># pose sequence as a NLI premise and label (politics) as a hypothesis</span>
-<span class="n">premise</span> <span class="o">=</span> <span class="s2">&quot;Who are you voting for in 2020?&quot;</span>
+<span class="n">premise</span> <span class="o">=</span> <span class="s1">&#39;Who are you voting for in 2020?&#39;</span>
 <span class="n">hypothesis</span> <span class="o">=</span> <span class="s1">&#39;This text is about politics.&#39;</span>
 
 <span class="c1"># run through model pre-trained on MNLI</span>
@@ -235,7 +223,20 @@
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In their paper, the authors report an F1 of 37.9 on Yahoo Answers using the smallest version of BERT fine-tuned only on the Multi-genre NLI (MNLI) corpus. By simply using the larger and more recent Bart model pre-trained on MNLI, we were able to bring this model up to NUMBER.</p>
+<p>In the paper, the authors report an F1 of $37.9$ on Yahoo Answers using the smallest version of BERT fine-tuned only on the Multi-genre NLI (MNLI) corpus. By simply using the larger and more recent Bart model pre-trained on MNLI, we were able to bring this number up to $53.7$. For context, Yahoo Answers has 10 classes and <a href="https://paperswithcode.com/sota/text-classification-on-yahoo-answers">supervised models</a> get an accuracy of just over $70\%$.</p>
+<p>Of course, this number can be improved when some data is available for training. In addition to the extreme fully unsupervised setting, the authors consider a setup which corresponds to the traditional <em>generalized zero-shot learning</em> setting where only a subset of the dataset's labels are available during training. The model is then evaluated on all labels together, both seen and unseen, at test time.</p>
+<p>See <a href="http://35.208.71.201:8000/">our live demo here</a> to try it out for yourself! Enter a sequence you want to classify and any labels of interest and watch Bart do its magic in real time.</p>
+<p><img src="https://i.ibb.co/WB6HsFk/Screen-Shot-2020-05-26-at-5-31-25-PM.png" alt="live demo" /></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Sections-to-put-somewhere:">Sections to put somewhere:<a class="anchor-link" href="#Sections-to-put-somewhere:"> </a></h4><ul>
+<li>Zero-shot learning and its relationship to few-shot learning, sample efficiency, domain adaptation</li>
+<li>Some kind of good visualization</li>
+</ul>
 
 </div>
 </div>
