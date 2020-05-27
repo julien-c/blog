@@ -39,6 +39,7 @@ baseurl: "/blog" # the subpath of your site, e.g. "/blog".
 # Email and twitter are optional:
 email: josephddavison@gmail.com
 twitter_username: "joeddav"
+linkedin_username: "josephdavison"
 
 # Set this to true to get LaTeX math equation support
 use_math: true
