@@ -3,9 +3,9 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="shortcut icon" type="image/x-icon" href="/blog/assets/icons/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>Text classification in the BERT era without annotated data | Joe Davison</title>
+<title>Text classification without annotated data in the BERT era | Joe Davison</title>
 <meta name="generator" content="Jekyll v3.8.5" />
-<meta property="og:title" content="Text classification in the BERT era without annotated data" />
+<meta property="og:title" content="Text classification without annotated data in the BERT era" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Just a simple fastpages site for publishing things here and there" />
 <meta property="og:description" content="Just a simple fastpages site for publishing things here and there" />
@@ -15,7 +15,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2020-05-28T00:00:00-05:00" />
 <script type="application/ld+json">
-{"url":"https://joeddav.github.io/blog/2020/05/28/ZSL.html","@type":"BlogPosting","headline":"Text classification in the BERT era without annotated data","dateModified":"2020-05-28T00:00:00-05:00","datePublished":"2020-05-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://joeddav.github.io/blog/2020/05/28/ZSL.html"},"description":"Just a simple fastpages site for publishing things here and there","@context":"https://schema.org"}</script>
+{"url":"https://joeddav.github.io/blog/2020/05/28/ZSL.html","@type":"BlogPosting","headline":"Text classification without annotated data in the BERT era","dateModified":"2020-05-28T00:00:00-05:00","datePublished":"2020-05-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://joeddav.github.io/blog/2020/05/28/ZSL.html"},"description":"Just a simple fastpages site for publishing things here and there","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
@@ -90,13 +90,13 @@
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">Text classification in the BERT era without annotated data</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-05-28T00:00:00-05:00" itemprop="datePublished">
+    <h1 class="post-title p-name" itemprop="name headline">Text classification without annotated data in the BERT era</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-05-28T00:00:00-05:00" itemprop="datePublished">
         May 28, 2020
       </time>
        • <span class="read-time" title="Estimated read time">
     
     
-      8 min read
+      9 min read
     
 </span></p>
 
@@ -136,21 +136,21 @@
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's be honest, natural language processing is an enthrallingly exciting field these days. In recent years, the community has begun to figure out some pretty effective methods of learning from the enormous amounts of unlabeled data on the internet. The success of transfer learning from unsupervised models has allowed us to surpass virtually all existing benchmarks on downstream supervised learning tasks. As we continue to develop new model architectures and unsupervised learning objectives, "state of the art" continues to be a rapidly moving target for many tasks where large amounts of labeled data is available.</p>
+<p>Natural language processing is an enthrallingly exciting field right now. In recent years, the community has begun to figure out some pretty effective methods of learning from the enormous amounts of unlabeled data on the internet. The success of transfer learning from unsupervised models has allowed us to surpass virtually all existing benchmarks on downstream supervised learning tasks. As we continue to develop new model architectures and unsupervised learning objectives, "state of the art" continues to be a rapidly moving target for many tasks where large amounts of labeled data is available.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In many real-world settings, however, annotated data is either scarse or  unavailable entirely. It seems almost tragic that we could have such success in unsupervised learning as a pre-training step but having focused so little on  alleviating our reliance on labaled data in downstream applications like sequence classification. Recent models like BERT, XLNet, and T5 have been shown to encode a tremendous amount of knowledge in their weights – it seems like we should be able to figure out a way to use that data in traditionally supervised tasks but without such a heavy reliance on task-specific annotated data.</p>
+<p>In many real-world settings, however, annotated data is either scarse or  unavailable entirely. It seems almost tragic that we could have such success in unsupervised learning as a pre-training step but having focused so little on  alleviating our reliance on labaled data in downstream applications like sequence classification. Recent models like BERT, XLNet, and T5 have been shown to encode a tremendous amount of information in their weights – it seems like we should be able to figure out a way to use that data in traditionally supervised tasks but without such a heavy reliance on task-specific annotated data.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Of course, <em>some</em> research has in fact been done in this area. <strong>In this post, I will give an overview of a few techniques, both from published research and my own experiments, for using state-of-the-art NLP models for sequence classification in the absense of large annotated datasets.</strong> Specifically, I will cover the following low-resource settings:</p>
+<p>Of course, <em>some</em> research has in fact been done in this area. <strong>In this post, I will give an overview of a few techniques, both from published research and my own experiments, for using state-of-the-art NLP models for sequence classification in the absense of large annotated datasets.</strong> Specifically, I will cover the following low-resource settings, with a focus on the first:</p>
 <ol>
 <li>I have no training data (extreme zero-shot learning)</li>
 <li>I have sufficient data for some labels, but not for others (traditional zero-shot learning)</li>
@@ -163,7 +163,7 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>At the end of the post, I also link a few fantastic resources out there for NLP in low-resource languages. While I focus specifically on sequence-level classification, my hope is that some of these methods will be applicable to or inspire ideas for other tasks as well.</p>
+<p>At the end of the post, I also link a few fantastic resources out there for NLP in low-resource languages. While I focus specifically on sequence-level classification, my hope is that some of these methods will be applicable to or inspire ideas for other kinds of tasks as well.</p>
 
 </div>
 </div>
@@ -176,7 +176,14 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Background:-Natural-Language-Inference-(NLI)">Background: Natural Language Inference (NLI)<a class="anchor-link" href="#Background:-Natural-Language-Inference-(NLI)"> </a></h4><p>Several of the methods described below use Natural Language Inference as pre-training step, so here is a quick review. NLI considers two sentences: a "premise" and a "hypothesis". The task is to determine whether the hypothesis is true (entailment) or false (contradiction) given the premise.</p>
+<p>As a starting poing, we will consider the most extreme setting where we have no access training data of any kind. To make this problem tractable, we do assume that we have some kind of textual descriptor of the classes – typically just the names of the classes. The basic idea at play is to use a pretrained model to get a latent representation for the data and labels, allowing us to infer something about the relationship between them.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Background:-Natural-Language-Inference-(NLI)">Background: Natural Language Inference (NLI)<a class="anchor-link" href="#Background:-Natural-Language-Inference-(NLI)"> </a></h4><p>Several of the methods described below use Natural Language Inference as a pre-training step, so here is a quick review. NLI considers two sentences: a "premise" and a "hypothesis". The task is to determine whether the hypothesis is true (entailment) or false (contradiction) given the premise.</p>
 
 </div>
 </div>
@@ -197,8 +204,151 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="NLI-models-as-effective,-ready-made-zero-shot-classifiers">NLI models as effective, ready-made zero-shot classifiers<a class="anchor-link" href="#NLI-models-as-effective,-ready-made-zero-shot-classifiers"> </a></h3><p>Recently, <a href="https://arxiv.org/abs/1909.00161">Yin et al. (2019)</a> proposed a method which uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well.</p>
-<p>The idea is to take the sequence we're interested in labeling as the "premise" and to turn each candidate label into a "hypothesis." If the NLI model predicts that the premise "entails" the hypothesis, we take the label to be true. This gives us a ready-made compatibility function that works reasonably well without any task-specific training. See the code snippet below to see how easily this can be done with 🤗 Transformers.</p>
+<h3 id="A-latent-embedding-approach">A latent embedding approach<a class="anchor-link" href="#A-latent-embedding-approach"> </a></h3><p>A common approach to zero shot learning in the computer vision setting is to use an existing featurizer to embed an image and any possible class names into their corresponding latent representations. They can then take some training set and use only a subset of the available labels to learn a linear projection to align the image and label embeddings. At test time, this framework allows one to embed any label (seen or unseen) and any image into the same latent space and measure their distance.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the text domain, we have the advantage that we can use a single model to embed both the data and the class names into the same space, eliminating the need for the data-hungry alignment step. This is not a new technique – researchers and practitioners have used pooled word vectors in similar ways for some time. But recently we have seen a dramatic increase in the quality of sentence embedding models. We therefore decided to run some experiments with Sentence-BERT, a recent technique which fine-tunes the pooled sequence representations for increased semantic richness, as a method for obtaining sequence and label embeddings.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To formalize this, suppose we have a sequence embedding model $\Phi$ and set of possible class names $C$. We classify a given sequence $x$ according to,</p>
+$$
+\hat{c} = \arg\max_{c \in C} \cos(\Phi(x), \Phi(c))
+$$<p>where $\cos$ is the cosine similarity. Here's an example code snippet showing how this can be done using Sentence-BERT as our embedding model $\Phi$:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># load the sentence-bert model from the HuggingFace model hub</span>
+<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">AutoTokenizer</span><span class="p">,</span> <span class="n">AutoModel</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;deepset/sentence_bert&#39;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">AutoModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;deepset/sentence_bert&#39;</span><span class="p">)</span>
+
+<span class="n">sentence</span> <span class="o">=</span> <span class="s1">&#39;Who are you voting for in 2020?&#39;</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;business&#39;</span><span class="p">,</span> <span class="s1">&#39;art &amp; culture&#39;</span><span class="p">,</span> <span class="s1">&#39;politics&#39;</span><span class="p">]</span>
+
+<span class="c1"># run inputs through model and mean-pool over the sequence</span>
+<span class="c1"># dimension to get sequence-level representations</span>
+<span class="n">inputs</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">batch_encode_plus</span><span class="p">([</span><span class="n">sentence</span><span class="p">]</span> <span class="o">+</span> <span class="n">labels</span><span class="p">,</span>
+                                     <span class="n">return_tensors</span><span class="o">=</span><span class="s1">&#39;pt&#39;</span><span class="p">,</span>
+                                     <span class="n">pad_to_max_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">input_ids</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">]</span>
+<span class="n">attention_mask</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">]</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">sentence_rep</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">label_reps</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># now find the labels with the highest cosine similarities to</span>
+<span class="c1"># the sentence</span>
+<span class="n">similarities</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cosine_similarity</span><span class="p">(</span><span class="n">sentence_rep</span><span class="p">,</span> <span class="n">label_reps</span><span class="p">)</span>
+<span class="n">closest</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">closest</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;label: </span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">}</span><span class="s1"> </span><span class="se">\t</span><span class="s1"> similarity: </span><span class="si">{</span><span class="n">similarities</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>label: politics 	 similarity: 0.21561521291732788
+label: business 	 similarity: 0.004524140153080225
+label: art &amp; culture 	 similarity: -0.027396833524107933
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><div class="flash">
+    <svg class="octicon octicon-info" viewBox="0 0 14 16" version="1.1" width="14" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M6.3 5.69a.942.942 0 01-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 01-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z" /></svg>
+    <strong>Note: </strong>This code snippet uses <code>deepset/sentence_bert</code> which is the smallest version of the S-BERT model. Our experiments use larger models which are currently available only in the <code>sentence-transformers</code> GitHub repository, which we hope to make available in the Hugging Face model hub soon.
+</div></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="https://joeddav.github.io/blog/images/zsl/tsne_no_projection.png" alt="visual of S-BERT label and text embeddings" title="t-SNE visualization of Yahoo Answers data vs. label S-BERT embeddings" /></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>One problem to this method is that Sentence-BERT is designed to learn effective sentence-level, not single- or multi-word representations like our class names. It is therefore reasonable to suppose that our label embeddings may not be as semantically salient as popular word-level embedding methods (i.e. word2vec). This is seen in the t-SNE visualization above where the data cluster together by class reasonably well, but the labels are poorly aligned. If we were to use word vectors as our label representations, however, we would need annotated data to learn an alignment between the S-BERT sequence representations and the word2vec label representations.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We addressed this issue with the following procedure:</p>
+<ol>
+<li>Take the top $K$ most frequent words $V$ in the vocabulary of a word2vec model</li>
+<li>Obtain embeddings for each word using word2vec, $\Phi_{\text{word}}(V)$</li>
+<li>Obtain embeddings for each word using S-BERT, $\Phi_{\text{sent}}(V)$</li>
+<li>Learn a least-squares linear projection $W$ with L2 regularization from $\Phi_{\text{sent}}(V)$ to $\Phi_{\text{word}}(V)$</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we use $W$ in our classification as an additional transformation to our latent space for both sequence and label embeddings:</p>
+$$
+\hat{c} = \arg\max_{c \in C} \cos(\Phi_{\text{sent}}(x)W, \Phi_{\text{sent}}(c)W)
+$$<p>This procedure can be thought of as a kind of dimensionality reduction. As seen in the t-SNE visual below, this projection makes the label embeddings much better aligned with their corresponding data while maintining the superior performance of S-BERT compared to pooled word vectors. Importantly, this procedure does not require any additional data beyond a word2vec mapping sorted by word frequency.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="https://joeddav.github.io/blog/images/zsl/tsne_with_projection.png" alt="visual of S-BERT + projection label and text embeddings" title="t-SNE visualization of embeddings after SBERT to Wordvec projection" /></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>On Yahoo Answers, we find an F1 of $46.9$ and $31.2$ with and without this projection step, respectively.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Using-NLI-models-as-effective,-ready-made-zero-shot-classifiers">Using NLI models as effective, ready-made zero-shot classifiers<a class="anchor-link" href="#Using-NLI-models-as-effective,-ready-made-zero-shot-classifiers"> </a></h3><p>Recently, <a href="https://arxiv.org/abs/1909.00161">Yin et al. (2019)</a> proposed a method which uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well.</p>
+<p>The idea is to take the sequence we're interested in labeling as the "premise" and to turn each candidate label into a "hypothesis." If the NLI model predicts that the premise "entails" the hypothesis, we take the label to be true. Unlike the previous approach which utilizes independent embeddings for the data and labels and requires us to determine their relationship, this method gives us a ready-made compatibility function that works reasonably well without any task-specific training. See the code snippet below which demonstrates how easily this can be done with 🤗 Transformers.</p>
 
 </div>
 </div>
@@ -254,7 +404,7 @@
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In the paper, the authors report an F1 of $37.9$ on Yahoo Answers using the smallest version of BERT fine-tuned only on the Multi-genre NLI (MNLI) corpus. By simply using the larger and more recent Bart model pre-trained on MNLI, we were able to bring this number up to $53.7$. For context, Yahoo Answers has 10 classes and <a href="https://paperswithcode.com/sota/text-classification-on-yahoo-answers">supervised models</a> get an accuracy of just over $70\%$.</p>
+<p>In the paper, the authors report a label-weighted F1 of $37.9$ on Yahoo Answers topic classification using the smallest version of BERT fine-tuned only on the Multi-genre NLI (MNLI) corpus. By simply using the larger and more recent Bart model pre-trained on MNLI, we were able to bring this number up to $53.7$. For context, Yahoo Answers has 10 classes and <a href="https://paperswithcode.com/sota/text-classification-on-yahoo-answers">supervised models</a> get an accuracy of just over $70\%$.</p>
 
 </div>
 </div>
@@ -276,120 +426,26 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="A-latent-embedding-approach">A latent embedding approach<a class="anchor-link" href="#A-latent-embedding-approach"> </a></h3><p>A common approach to zero shot learning in the computer vision setting is to use an existing featurizer to embed an image and any possible class names into their corresponding latent representations. They can then take some training set and use only a subset of the available labels to learn a linear projection to align the image and label embeddings. At test time, this framework allows one to embed any label (seen or unseen) and any image into the same latent space and measure their distance.</p>
+<h2 id="Setting:-I-have-sufficient-data-for-some-labels,-but-not-for-others">Setting: I have sufficient data for some labels, but not for others<a class="anchor-link" href="#Setting:-I-have-sufficient-data-for-some-labels,-but-not-for-others"> </a></h2><p><code>short description</code></p>
+<p><code>methods</code></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="https://joeddav.github.io/blog/images/zsl/socher.png" alt="latent embeddings of images and labels" title="t-SNE visualization of projected image &amp; class embeddings from Socher et al." /></p>
+<h2 id="Setting:-I-have-a-little-bit-of-annotated-data">Setting: I have a little bit of annotated data<a class="anchor-link" href="#Setting:-I-have-a-little-bit-of-annotated-data"> </a></h2><p><code>short description</code></p>
+<p><code>methods</code></p>
+<p><code>additional reading</code></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In the text domain, we have the advantage that we can use a single model to embed both the sequences to classify and the class names into the same space, eliminating the need for the data-hungry alignment step. This is not a new technique – researchers and practitioners have used pooled word vectors in similar ways for some time. But recently we have seen a dramatic increase in the quality of sentence embedding models. We therefore experiment with Sentence-BERT, a recent technique which fine-tunes pooled sequence representations for increased semantic richness, as a method for obtaining sequence and label embeddings.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>To formalize this, suppose we have a sequence embedding model $\Phi$ and set of possible class names $C$. We classify a given sequence $x$ according to,</p>
-$$
-\hat{c} = \arg\max_{c \in C} \cos(\Phi(x), \Phi(c))
-$$<p>where $\cos$ is the cosine similarity. Here's an example code snippet showing how this can be done using Sentence-BERT as our embedding model $\Phi$:</p>
-
-</div>
-</div>
-</div>
-    
-    
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># load the sentence-bert model from the HuggingFace model hub</span>
-<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">AutoTokenizer</span><span class="p">,</span> <span class="n">AutoModel</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
-<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;deepset/sentence_bert&quot;</span><span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">AutoModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;deepset/sentence_bert&quot;</span><span class="p">)</span>
-
-<span class="n">sentence</span> <span class="o">=</span> <span class="s1">&#39;Who are you voting for in 2020?&#39;</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;business&#39;</span><span class="p">,</span> <span class="s1">&#39;art &amp; culture&#39;</span><span class="p">,</span> <span class="s1">&#39;politics&#39;</span><span class="p">]</span>
-
-<span class="c1"># run inputs through model and mean-pool over the sequence</span>
-<span class="c1"># dimension to get sequence-level representations</span>
-<span class="n">inputs</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">batch_encode_plus</span><span class="p">([</span><span class="n">sentence</span><span class="p">]</span> <span class="o">+</span> <span class="n">labels</span><span class="p">,</span>
-                                     <span class="n">return_tensors</span><span class="o">=</span><span class="s1">&#39;pt&#39;</span><span class="p">,</span>
-                                     <span class="n">pad_to_max_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">input_ids</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">]</span>
-<span class="n">attention_mask</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">]</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">sentence_rep</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">label_reps</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-<span class="c1"># now find the labels with the highest cosine similarities to</span>
-<span class="c1"># the sentence</span>
-<span class="n">similarities</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cosine_similarity</span><span class="p">(</span><span class="n">sentence_rep</span><span class="p">,</span> <span class="n">label_reps</span><span class="p">)</span>
-<span class="n">closest</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">closest</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;label: </span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">}</span><span class="s1"> </span><span class="se">\t</span><span class="s1"> similarity: </span><span class="si">{</span><span class="n">similarities</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>label: politics 	 similarity: 0.21561521291732788
-label: business 	 similarity: 0.004524140153080225
-label: art &amp; culture 	 similarity: -0.027396833524107933
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-    
-
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>One downside to this method is that Sentence-BERT is designed to learn effective sentence-level, not single- or multi-word representations like our class names. It is therefore reasonable to suppose that our label embeddings may not be as semantically salient as popular word-level embedding methods (i.e. word2vec). If we were to use word vectors as our label representations, however, we would need annotated data to learn an alignment between the S-BERT sequence representations and the word2vec label representations.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>We addressed this issue with the following procedure:</p>
-<ol>
-<li>Take the top $K$ most frequent words $V$ in the vocabulary of a word2vec model</li>
-<li>Obtain embeddings for each word using word2vec, $\Phi_{\text{word}}(V)$</li>
-<li>Obtain embeddings for each word using S-BERT, $\Phi_{\text{sent}}(V)$</li>
-<li>Learn a linear projection $W$ with L2 regularization from $\Phi_{\text{sent}}(V)$ to $\Phi_{\text{word}}(V)$</li>
-</ol>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now we use $W$ in our classification as an additional transformation to our latent space for both sequence and label embeddings:</p>
-$$
-\hat{c} = \arg\max_{c \in C} \cos(\Phi_{\text{sent}}(x)W, \Phi_{\text{sent}}(c)W)
-$$<p>This procedure can be thought of as a kind of dimensionality reduction. By learning a regularized projection from the S-BERT embeddings to word vectors, the label and sequence representations become better aligned with one another while maintining the superior performance of S-BERT compared to pooled word vectors. Importantly, this procedure does not require any additional data beyond a word2vec mapping sorted by word frequency.</p>
-<p>On Yahoo Answers, we find an F1 of $46.9$ and $31.2$ with and without this projection step, respectively.</p>
+<h3 id="Setting:-I-have-no-annotated-data,-but-lots-of-unlabeled-data">Setting: I have no annotated data, but lots of unlabeled data<a class="anchor-link" href="#Setting:-I-have-no-annotated-data,-but-lots-of-unlabeled-data"> </a></h3><p><code>description here</code></p>
+<p><code>methods</code></p>
+<p><code>additional reading</code></p>
 
 </div>
 </div>
@@ -404,7 +460,7 @@ $$<p>This procedure can be thought of as a kind of dimensionality reduction. By 
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Low-resource and cross-lingual learning is a huge research area in NLP right now and much has been written about it, so I'll just link a few great resources:</p>
 <ul>
-<li><p>Graham Neubig's recently released <a href="https://github.com/neubig/lowresource-nlp-bootcamp-2020">Low Resource NLP Bootcamp</a> is a GitHub repo containing 8 of lectures (plus exercises) focused on NLP in data-scarse languages.</p>
+<li><p>Graham Neubig's recently released <a href="https://github.com/neubig/lowresource-nlp-bootcamp-2020">Low Resource NLP Bootcamp</a> is a GitHub repo containing 8 lectures (plus exercises) focused on NLP in data-scarse languages.</p>
 </li>
 <li><p>Sebastian Ruder's blog post, <a href="https://ruder.io/cross-lingual-embeddings/">"A survey of cross-lingual word embedding models"</a></p>
 </li>
