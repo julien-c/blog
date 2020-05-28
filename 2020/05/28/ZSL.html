@@ -3,9 +3,9 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="shortcut icon" type="image/x-icon" href="/blog/assets/icons/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>Modern NLP with Little to No Annotated Data | Joe Davison</title>
+<title>Text classification in the BERT era without annotated data | Joe Davison</title>
 <meta name="generator" content="Jekyll v3.8.5" />
-<meta property="og:title" content="Modern NLP with Little to No Annotated Data" />
+<meta property="og:title" content="Text classification in the BERT era without annotated data" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Just a simple fastpages site for publishing things here and there" />
 <meta property="og:description" content="Just a simple fastpages site for publishing things here and there" />
@@ -15,7 +15,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2020-05-28T00:00:00-05:00" />
 <script type="application/ld+json">
-{"url":"https://joeddav.github.io/blog/2020/05/28/ZSL.html","@type":"BlogPosting","headline":"Modern NLP with Little to No Annotated Data","dateModified":"2020-05-28T00:00:00-05:00","datePublished":"2020-05-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://joeddav.github.io/blog/2020/05/28/ZSL.html"},"description":"Just a simple fastpages site for publishing things here and there","@context":"https://schema.org"}</script>
+{"url":"https://joeddav.github.io/blog/2020/05/28/ZSL.html","@type":"BlogPosting","headline":"Text classification in the BERT era without annotated data","dateModified":"2020-05-28T00:00:00-05:00","datePublished":"2020-05-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://joeddav.github.io/blog/2020/05/28/ZSL.html"},"description":"Just a simple fastpages site for publishing things here and there","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
@@ -90,13 +90,13 @@
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">Modern NLP with Little to No Annotated Data</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-05-28T00:00:00-05:00" itemprop="datePublished">
+    <h1 class="post-title p-name" itemprop="name headline">Text classification in the BERT era without annotated data</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-05-28T00:00:00-05:00" itemprop="datePublished">
         May 28, 2020
       </time>
        • <span class="read-time" title="Estimated read time">
     
     
-      6 min read
+      8 min read
     
 </span></p>
 
@@ -136,52 +136,60 @@
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Natural language processing is a task-rich area and enumerating every type of low-resource learning technique for all likely tasks of interest is impractical. Instead, I will focus primarily on sequence classification but describe techniques applicable to a wide variety of data (in)availability situations. My hope is that these methods will be useful for some and, for most, will inspire creativity in leveraging pre-trained models in low-resource settings.</p>
+<p>Let's be honest, natural language processing is an enthrallingly exciting field these days. In recent years, the community has begun to figure out some pretty effective methods of learning from the enormous amounts of unlabeled data on the internet. The success of transfer learning from unsupervised models has allowed us to surpass virtually all existing benchmarks on downstream supervised learning tasks. As we continue to develop new model architectures and unsupervised learning objectives, "state of the art" continues to be a rapidly moving target for many tasks where large amounts of labeled data is available.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Settings (focus on classification):</p>
-<ul>
-<li>No annotated data is available<ul>
-<li>NLI Model</li>
-<li>SBERT2Wordvec</li>
-</ul>
-</li>
-<li>Data is available for some labels, but missing for others<ul>
-<li>NLI Model</li>
-<li>Align SBERT2Wordvec</li>
-</ul>
-</li>
-<li>No annotated data is available, but lots of non-annotated<ul>
-<li>Semi-supervised... be careful not to scoop your own research here</li>
-</ul>
-</li>
-<li>Some annotated data is available, but not enough to learn a good classifier<ul>
-<li>Few shot, sample efficiency</li>
-</ul>
-</li>
-<li>Data is available, but not in the language I want<ul>
-<li>Cross lingual alignment techniques, link to seb ruder's post</li>
-</ul>
-</li>
-</ul>
+<p>In many real-world settings, however, annotated data is either scarse or  unavailable entirely. It seems almost tragic that we could have such success in unsupervised learning as a pre-training step but having focused so little on  alleviating our reliance on labaled data in downstream applications like sequence classification. Recent models like BERT, XLNet, and T5 have been shown to encode a tremendous amount of knowledge in their weights – it seems like we should be able to figure out a way to use that data in traditionally supervised tasks but without such a heavy reliance on task-specific annotated data.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Setting:-No-Training-Data-is-Available">Setting: No Training Data is Available<a class="anchor-link" href="#Setting:-No-Training-Data-is-Available"> </a></h2>
+<p>Of course, <em>some</em> research has in fact been done in this area. <strong>In this post, I will give an overview of a few techniques, both from published research and my own experiments, for using state-of-the-art NLP models for sequence classification in the absense of large annotated datasets.</strong> Specifically, I will cover the following low-resource settings:</p>
+<ol>
+<li>I have no training data (extreme zero-shot learning)</li>
+<li>I have sufficient data for some labels, but not for others (traditional zero-shot learning)</li>
+<li>I have a little bit of annotated data (few-shot learning)</li>
+<li>I have no annotated data, but lots of unlabeled data (unsupervised classification)</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>At the end of the post, I also link a few fantastic resources out there for NLP in low-resource languages. While I focus specifically on sequence-level classification, my hope is that some of these methods will be applicable to or inspire ideas for other tasks as well.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Setting:-I-have-no-training-data">Setting: I have no training data<a class="anchor-link" href="#Setting:-I-have-no-training-data"> </a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h4 id="Background:-Natural-Language-Inference-(NLI)">Background: Natural Language Inference (NLI)<a class="anchor-link" href="#Background:-Natural-Language-Inference-(NLI)"> </a></h4><p>Several of the methods described below use Natural Language Inference as pre-training step, so here is a quick review. NLI considers two sentences: a "premise" and a "hypothesis". The task is to determine whether the hypothesis is true (entailment) or false (contradiction) given the premise.</p>
-<p><img src="https://i.ibb.co/gWCjvdP/Screen-Shot-2020-05-26-at-5-10-07-PM.png" alt="example NLI sentences" title="Examples from http://nlpprogress.com/english/natural_language_inference.html" /></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="https://joeddav.github.io/blog/images/zsl/nli-examples.png" alt="example NLI sentences" title="Examples from http://nlpprogress.com/english/natural_language_inference.html" /></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <p>When using transformer architectures like BERT, NLI datasets are typically modeled via <em>sequence-pair classification</em>. That is, we feed both the premise and the hypothesis through the model together as distinct segments and learn a classification head predicting one of <code>[contradiction, neutral, entailment]</code>.</p>
 
 </div>
@@ -189,8 +197,8 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="A-ready-made-zero-shot-classifier">A ready-made zero-shot classifier<a class="anchor-link" href="#A-ready-made-zero-shot-classifier"> </a></h3><p>Recently, <a href="https://arxiv.org/abs/1909.00161">Yin et al. (2019)</a> proposed a method which uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well.</p>
-<p>The idea is to take the sequence we're interested in labeling as the "premise" and to turn each candidate label into a "hypothesis." If the model says that the premise "entails" the hypothesis, we take the label to be true. This gives us a ready-made compatibility function that works reasonably well on certain tasks without any task-specific training. See the code snippet below to see how easily this can be done with 🤗 Transformers.</p>
+<h3 id="NLI-models-as-effective,-ready-made-zero-shot-classifiers">NLI models as effective, ready-made zero-shot classifiers<a class="anchor-link" href="#NLI-models-as-effective,-ready-made-zero-shot-classifiers"> </a></h3><p>Recently, <a href="https://arxiv.org/abs/1909.00161">Yin et al. (2019)</a> proposed a method which uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well.</p>
+<p>The idea is to take the sequence we're interested in labeling as the "premise" and to turn each candidate label into a "hypothesis." If the NLI model predicts that the premise "entails" the hypothesis, we take the label to be true. This gives us a ready-made compatibility function that works reasonably well without any task-specific training. See the code snippet below to see how easily this can be done with 🤗 Transformers.</p>
 
 </div>
 </div>
@@ -198,14 +206,11 @@
     
     
 <div class="cell border-box-sizing code_cell rendered">
-<details class="description" open="">
-      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
-        <p><div class="input">
+<div class="input">
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#collapse-show</span>
-<span class="c1"># load model pretrained on MNLI</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># load model pretrained on MNLI</span>
 <span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">BartForSequenceClassification</span><span class="p">,</span> <span class="n">BartTokenizer</span>
 <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">BartTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;bart-large-mnli&#39;</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">BartForSequenceClassification</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;bart-large-mnli&#39;</span><span class="p">)</span>
@@ -229,8 +234,7 @@
     </div>
 </div>
 </div>
-</p>
-    </details>
+
 <div class="output_wrapper">
 <div class="output">
 
@@ -251,22 +255,52 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>In the paper, the authors report an F1 of $37.9$ on Yahoo Answers using the smallest version of BERT fine-tuned only on the Multi-genre NLI (MNLI) corpus. By simply using the larger and more recent Bart model pre-trained on MNLI, we were able to bring this number up to $53.7$. For context, Yahoo Answers has 10 classes and <a href="https://paperswithcode.com/sota/text-classification-on-yahoo-answers">supervised models</a> get an accuracy of just over $70\%$.</p>
-<p>Of course, this number can be improved when some data is available for training. In addition to the extreme fully unsupervised setting, the authors consider a setup which corresponds to the traditional <em>generalized zero-shot learning</em> setting where only a subset of the dataset's labels are available during training. The model is then evaluated on all labels together, both seen and unseen, at test time.</p>
-<p>See <a href="http://35.208.71.201:8000/">our live demo here</a> to try it out for yourself! Enter a sequence you want to classify and any labels of interest and watch Bart do its magic in real time.</p>
-<p><img src="https://i.ibb.co/WB6HsFk/Screen-Shot-2020-05-26-at-5-31-25-PM.png" alt="live demo" /></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="A-Latent-Embedding-Approach">A Latent Embedding Approach<a class="anchor-link" href="#A-Latent-Embedding-Approach"> </a></h3><p>A slightly less effective but more flexible approach is to embed both the sequence and the class names of interest into the same representation space and then simply select the label closest in latent space.</p>
-<p>This is a well-known technique in Zero Shot Learning in Computer Vision. Take the word vectors for each class and some latent representation for an image and project them to the same space. Learning this projection requires data for some labels, but allows you to generalize to unseen labels at test time.</p>
-<p>We found that in the text regime, we can follow the same procedure but without the need for any annotated data ahead of time. By simply using a single sentence representation model, we can embed both the sequences to classify and the candidate labels into the same latent space.</p>
+<p>Of course, this number can be improved when some data is available for training. In addition to the extreme fully unsupervised setting, the authors consider a setup which corresponds to the traditional <em>generalized zero-shot learning</em> setting where only a subset of the dataset's labels are available during training. The model is then evaluated on all labels together, both seen and unseen, at test time.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>See <a href="http://35.208.71.201:8000/">our live demo here</a> to try it out for yourself! Enter a sequence you want to classify and any labels of interest and watch Bart do its magic in real time.</p>
+<p><img src="https://joeddav.github.io/blog/images/zsl/zsl-demo-screenshot.png" alt="live demo" /></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="A-latent-embedding-approach">A latent embedding approach<a class="anchor-link" href="#A-latent-embedding-approach"> </a></h3><p>A common approach to zero shot learning in the computer vision setting is to use an existing featurizer to embed an image and any possible class names into their corresponding latent representations. They can then take some training set and use only a subset of the available labels to learn a linear projection to align the image and label embeddings. At test time, this framework allows one to embed any label (seen or unseen) and any image into the same latent space and measure their distance.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="https://joeddav.github.io/blog/images/zsl/socher.png" alt="latent embeddings of images and labels" title="t-SNE visualization of projected image &amp; class embeddings from Socher et al." /></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the text domain, we have the advantage that we can use a single model to embed both the sequences to classify and the class names into the same space, eliminating the need for the data-hungry alignment step. This is not a new technique – researchers and practitioners have used pooled word vectors in similar ways for some time. But recently we have seen a dramatic increase in the quality of sentence embedding models. We therefore experiment with Sentence-BERT, a recent technique which fine-tunes pooled sequence representations for increased semantic richness, as a method for obtaining sequence and label embeddings.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To formalize this, suppose we have a sequence embedding model $\Phi$ and set of possible class names $C$. We classify a given sequence $x$ according to,</p>
 $$
 \hat{c} = \arg\max_{c \in C} \cos(\Phi(x), \Phi(c))
-$$<p>where $\Phi$ is a sentence-level embedding model, $x$ is a sequence, and $C$ is a set of class labels.</p>
-<p>Here's an example code snippet using the Sentence-BERT method:</p>
+$$<p>where $\cos$ is the cosine similarity. Here's an example code snippet showing how this can be done using Sentence-BERT as our embedding model $\Phi$:</p>
 
 </div>
 </div>
@@ -285,10 +319,10 @@ $$<p>where $\Phi$ is a sentence-level embedding model, $x$ is a sequence, and $C
 <span class="n">model</span> <span class="o">=</span> <span class="n">AutoModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;deepset/sentence_bert&quot;</span><span class="p">)</span>
 
 <span class="n">sentence</span> <span class="o">=</span> <span class="s1">&#39;Who are you voting for in 2020?&#39;</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;politics&#39;</span><span class="p">,</span> <span class="s1">&#39;business&#39;</span><span class="p">,</span> <span class="s1">&#39;art &amp; culture&#39;</span><span class="p">]</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;business&#39;</span><span class="p">,</span> <span class="s1">&#39;art &amp; culture&#39;</span><span class="p">,</span> <span class="s1">&#39;politics&#39;</span><span class="p">]</span>
 
-<span class="c1"># run inputs through model and mean over the sequence dimension</span>
-<span class="c1"># to get sentence-level representations</span>
+<span class="c1"># run inputs through model and mean-pool over the sequence</span>
+<span class="c1"># dimension to get sequence-level representations</span>
 <span class="n">inputs</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">batch_encode_plus</span><span class="p">([</span><span class="n">sentence</span><span class="p">]</span> <span class="o">+</span> <span class="n">labels</span><span class="p">,</span>
                                      <span class="n">return_tensors</span><span class="o">=</span><span class="s1">&#39;pt&#39;</span><span class="p">,</span>
                                      <span class="n">pad_to_max_length</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -303,7 +337,7 @@ $$<p>where $\Phi$ is a sentence-level embedding model, $x$ is a sequence, and $C
 <span class="n">similarities</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cosine_similarity</span><span class="p">(</span><span class="n">sentence_rep</span><span class="p">,</span> <span class="n">label_reps</span><span class="p">)</span>
 <span class="n">closest</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">closest</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;label: </span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">}</span><span class="s1">,</span><span class="se">\t</span><span class="s1"> cos: </span><span class="si">{</span><span class="n">similarities</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">:</span><span class="s1">0.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;label: </span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">}</span><span class="s1"> </span><span class="se">\t</span><span class="s1"> similarity: </span><span class="si">{</span><span class="n">similarities</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -316,9 +350,9 @@ $$<p>where $\Phi$ is a sentence-level embedding model, $x$ is a sequence, and $C
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>label: politics,	 cos: 0.2156
-label: business,	 cos: 0.0045
-label: art &amp; culture,	 cos: -0.0274
+<pre>label: politics 	 similarity: 0.21561521291732788
+label: business 	 similarity: 0.004524140153080225
+label: art &amp; culture 	 similarity: -0.027396833524107933
 </pre>
 </div>
 </div>
@@ -331,18 +365,32 @@ label: art &amp; culture,	 cos: -0.0274
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>One downside to this method is that Sentence-BERT is designed to learn sentence-level, not single- or multi-word representations like our class names. It is therefore reasonable to suppose that our label embeddings may not be as semantically salient as popular word-level embedding methods. But we can't use word vectors directly because then we would have to align our S-BERT sequence embeddings with the word vector label emebddings.</p>
+<p>One downside to this method is that Sentence-BERT is designed to learn effective sentence-level, not single- or multi-word representations like our class names. It is therefore reasonable to suppose that our label embeddings may not be as semantically salient as popular word-level embedding methods (i.e. word2vec). If we were to use word vectors as our label representations, however, we would need annotated data to learn an alignment between the S-BERT sequence representations and the word2vec label representations.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <p>We addressed this issue with the following procedure:</p>
 <ol>
-<li>Take the top $10,000$ most frequent words $V$ in skipgram's vocabulary</li>
-<li>Obtain embeddings for each word using skipgram $\Phi_{\text{word}}(V)$</li>
-<li>Obtain embeddings for each word using S-BERT $\Phi_{\text{sent}}(V)$</li>
+<li>Take the top $K$ most frequent words $V$ in the vocabulary of a word2vec model</li>
+<li>Obtain embeddings for each word using word2vec, $\Phi_{\text{word}}(V)$</li>
+<li>Obtain embeddings for each word using S-BERT, $\Phi_{\text{sent}}(V)$</li>
 <li>Learn a linear projection $W$ with L2 regularization from $\Phi_{\text{sent}}(V)$ to $\Phi_{\text{word}}(V)$</li>
 </ol>
-<p>Now we apply $W$ as an additional transformation to our latent space for both sequence and label embeddings:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we use $W$ in our classification as an additional transformation to our latent space for both sequence and label embeddings:</p>
 $$
 \hat{c} = \arg\max_{c \in C} \cos(\Phi_{\text{sent}}(x)W, \Phi_{\text{sent}}(c)W)
-$$
+$$<p>This procedure can be thought of as a kind of dimensionality reduction. By learning a regularized projection from the S-BERT embeddings to word vectors, the label and sequence representations become better aligned with one another while maintining the superior performance of S-BERT compared to pooled word vectors. Importantly, this procedure does not require any additional data beyond a word2vec mapping sorted by word frequency.</p>
+<p>On Yahoo Answers, we find an F1 of $46.9$ and $31.2$ with and without this projection step, respectively.</p>
+
 </div>
 </div>
 </div>
@@ -356,15 +404,10 @@ $$
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Low-resource and cross-lingual learning is a huge research area in NLP right now and much has been written about it, so I'll just link a few great resources:</p>
 <ul>
-<li>Graham Neubig's recently released <a href="https://github.com/neubig/lowresource-nlp-bootcamp-2020">Low Resource NLP Bootcamp</a>.
-
-<center>
-    <div class="jekyll-twitter-plugin"><blockquote class="twitter-tweet"><p lang="en" dir="ltr">At <a href="https://twitter.com/LTIatCMU?ref_src=twsrc%5Etfw">@LTIatCMU</a> we held a week-long &quot;Low Resource Natural Language Processing Bootcamp&quot; with 8 sets of lectures &amp; exercises on getting NLP to work in languages where resources are less abundant. We&#39;re making them available for all who are interested here: <a href="https://t.co/GGc5tAM2lh">https://t.co/GGc5tAM2lh</a> 1/ <a href="https://t.co/oJOmiyTyCS">pic.twitter.com/oJOmiyTyCS</a></p>&mdash; Graham Neubig (@gneubig) <a href="https://twitter.com/gneubig/status/1265644923153514496?ref_src=twsrc%5Etfw">May 27, 2020</a></blockquote>
-<script async="" src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-</div>
-</center>
+<li><p>Graham Neubig's recently released <a href="https://github.com/neubig/lowresource-nlp-bootcamp-2020">Low Resource NLP Bootcamp</a> is a GitHub repo containing 8 of lectures (plus exercises) focused on NLP in data-scarse languages.</p>
 </li>
-<li>Sebastian Ruder's blog post, <a href="https://ruder.io/cross-lingual-embeddings/">"A survey of cross-lingual word embedding models"</a></li>
+<li><p>Sebastian Ruder's blog post, <a href="https://ruder.io/cross-lingual-embeddings/">"A survey of cross-lingual word embedding models"</a></p>
+</li>
 </ul>
 
 </div>
