@@ -96,7 +96,7 @@
        • <span class="read-time" title="Estimated read time">
     
     
-      9 min read
+      11 min read
     
 </span></p>
 
@@ -150,7 +150,7 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Of course, <em>some</em> research has in fact been done in this area. <strong>In this post, I will give an overview of a few techniques, both from published research and my own experiments, for using state-of-the-art NLP models for sequence classification in the absense of large annotated datasets.</strong> Specifically, I will cover the following low-resource settings, with a focus on the first:</p>
+<p>Of course, <em>some</em> research has in fact been done in this area. <strong>In this post, I will present a few techniques, both from published research and my own experiments, for using state-of-the-art NLP models for sequence classification without large annotated training sets.</strong> Specifically, I will cover the following low-resource settings, with a focus on the first:</p>
 <ol>
 <li>I have no training data (extreme zero-shot learning)</li>
 <li>I have sufficient data for some labels, but not for others (traditional zero-shot learning)</li>
@@ -163,20 +163,7 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>At the end of the post, I also link a few fantastic resources out there for NLP in low-resource languages. While I focus specifically on sequence-level classification, my hope is that some of these methods will be applicable to or inspire ideas for other kinds of tasks as well.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Setting:-I-have-no-training-data">Setting: I have no training data<a class="anchor-link" href="#Setting:-I-have-no-training-data"> </a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>As a starting poing, we will consider the most extreme setting where we have no access training data of any kind. To make this problem tractable, we do assume that we have some kind of textual descriptor of the classes – typically just the names of the classes. The basic idea at play is to use a pretrained model to get a latent representation for the data and labels, allowing us to infer something about the relationship between them.</p>
+<p>We will first consider the most extreme setting where we have no access training data of any kind. To make this problem tractable, we do assume that we have some kind of textual descriptor of the classes – typically just the names of the classes. The basic idea at play is to use a pretrained model to get a latent representation for the data and labels, allowing us to infer something about the relationship between them.</p>
 
 </div>
 </div>
@@ -204,7 +191,7 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="A-latent-embedding-approach">A latent embedding approach<a class="anchor-link" href="#A-latent-embedding-approach"> </a></h3><p>A common approach to zero shot learning in the computer vision setting is to use an existing featurizer to embed an image and any possible class names into their corresponding latent representations. They can then take some training set and use only a subset of the available labels to learn a linear projection to align the image and label embeddings. At test time, this framework allows one to embed any label (seen or unseen) and any image into the same latent space and measure their distance.</p>
+<h2 id="A-latent-embedding-approach">A latent embedding approach<a class="anchor-link" href="#A-latent-embedding-approach"> </a></h2><p>A common approach to zero shot learning in the computer vision setting is to use an existing featurizer to embed an image and any possible class names into their corresponding latent representations. They can then take some training set and use only a subset of the available labels to learn a linear projection to align the image and label embeddings. At test time, this framework allows one to embed any label (seen or unseen) and any image into the same latent space and measure their distance.</p>
 
 </div>
 </div>
@@ -296,26 +283,26 @@ label: art &amp; culture 	 similarity: -0.027396833524107933
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="https://joeddav.github.io/blog/images/zsl/tsne_no_projection.png" alt="visual of S-BERT label and text embeddings" title="t-SNE visualization of Yahoo Answers data vs. label S-BERT embeddings" /></p>
+<p>One problem to this method is that Sentence-BERT is designed to learn effective sentence-level, not single- or multi-word representations like our class names. It is therefore reasonable to suppose that our label embeddings may not be as semantically salient as popular word-level embedding methods (i.e. word2vec). This is seen in the t-SNE visualization below where the data cluster together by class reasonably well, but the labels are poorly aligned. If we were to use word vectors as our label representations, however, we would need annotated data to learn an alignment between the S-BERT sequence representations and the word2vec label representations.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>One problem to this method is that Sentence-BERT is designed to learn effective sentence-level, not single- or multi-word representations like our class names. It is therefore reasonable to suppose that our label embeddings may not be as semantically salient as popular word-level embedding methods (i.e. word2vec). This is seen in the t-SNE visualization above where the data cluster together by class reasonably well, but the labels are poorly aligned. If we were to use word vectors as our label representations, however, we would need annotated data to learn an alignment between the S-BERT sequence representations and the word2vec label representations.</p>
+<p><img src="https://joeddav.github.io/blog/images/zsl/tsne_no_projection.png" alt="visual of S-BERT label and text embeddings" title="t-SNE visualization of Yahoo Answers S-BERT embeddings. Plotted points correpond to data and text boxes to corresponding labels." /></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We addressed this issue with the following procedure:</p>
+<p>In some of our own internal experiments, we addressed this issue with the following procedure:</p>
 <ol>
 <li>Take the top $K$ most frequent words $V$ in the vocabulary of a word2vec model</li>
 <li>Obtain embeddings for each word using word2vec, $\Phi_{\text{word}}(V)$</li>
 <li>Obtain embeddings for each word using S-BERT, $\Phi_{\text{sent}}(V)$</li>
-<li>Learn a least-squares linear projection $W$ with L2 regularization from $\Phi_{\text{sent}}(V)$ to $\Phi_{\text{word}}(V)$</li>
+<li>Learn a least-squares linear projection matrix $Z$ with L2 regularization from $\Phi_{\text{sent}}(V)$ to $\Phi_{\text{word}}(V)$</li>
 </ol>
 
 </div>
@@ -325,7 +312,7 @@ label: art &amp; culture 	 similarity: -0.027396833524107933
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Now we use $W$ in our classification as an additional transformation to our latent space for both sequence and label embeddings:</p>
 $$
-\hat{c} = \arg\max_{c \in C} \cos(\Phi_{\text{sent}}(x)W, \Phi_{\text{sent}}(c)W)
+\hat{c} = \arg\max_{c \in C} \cos(\Phi_{\text{sent}}(x)Z, \Phi_{\text{sent}}(c)Z)
 $$<p>This procedure can be thought of as a kind of dimensionality reduction. As seen in the t-SNE visual below, this projection makes the label embeddings much better aligned with their corresponding data while maintining the superior performance of S-BERT compared to pooled word vectors. Importantly, this procedure does not require any additional data beyond a word2vec mapping sorted by word frequency.</p>
 
 </div>
@@ -333,7 +320,7 @@ $$<p>This procedure can be thought of as a kind of dimensionality reduction. As 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="https://joeddav.github.io/blog/images/zsl/tsne_with_projection.png" alt="visual of S-BERT + projection label and text embeddings" title="t-SNE visualization of embeddings after SBERT to Wordvec projection" /></p>
+<p><img src="https://joeddav.github.io/blog/images/zsl/tsne_with_projection.png" alt="visual of S-BERT + projection label and text embeddings" title="t-SNE visualization of embeddings with SBERT to Wordvec projection" /></p>
 
 </div>
 </div>
@@ -347,7 +334,24 @@ $$<p>This procedure can be thought of as a kind of dimensionality reduction. As 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Using-NLI-models-as-effective,-ready-made-zero-shot-classifiers">Using NLI models as effective, ready-made zero-shot classifiers<a class="anchor-link" href="#Using-NLI-models-as-effective,-ready-made-zero-shot-classifiers"> </a></h3><p>Recently, <a href="https://arxiv.org/abs/1909.00161">Yin et al. (2019)</a> proposed a method which uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well.</p>
+<h4 id="When-some-annotated-data-is-available">When some annotated data is available<a class="anchor-link" href="#When-some-annotated-data-is-available"> </a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This technique is flexible and easily adapted to the case where a limited amount of labeled data is available (few-shot learning) or where we have annotated data for only a subset of the classes we're interested in (traditional zero-shot learning).</p>
+<p>To do so, we can simply learn an additional least-squares projection matrix to the embeddings of any available labels from their corresponding data embeddings. We also a add a variant of L2 regularization which regularizes towards the identity matrix. If we define $X_{Tr}, Y_{Tr}$ to be our training data and labels and $\Phi(X) = \Phi_\text{sent}(X)Z$ to be our embedding function as described above, our regularized objective is</p>
+$$
+W^\ast = \arg\min \dfrac{1}{n} || \Phi(X)^\top W - \Phi(Y) ||^2 + \lambda ||W - \mathbb{I}_d||^2
+$$<p>This is equivalent to Bayesian linear regression with a Gaussian prior on the weights centered at the identity matrix and variance controlled by $\lambda$. By pushing $W$ towards the identity matrix, we're effectively pushing the resulting projected embeddings $\Phi(X)W^\ast$ towards $\Phi(X)$.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Classification-as-Natural-Language-Inference">Classification as Natural Language Inference<a class="anchor-link" href="#Classification-as-Natural-Language-Inference"> </a></h2><p>Recently, <a href="https://arxiv.org/abs/1909.00161">Yin et al. (2019)</a> proposed a method which uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well.</p>
 <p>The idea is to take the sequence we're interested in labeling as the "premise" and to turn each candidate label into a "hypothesis." If the NLI model predicts that the premise "entails" the hypothesis, we take the label to be true. Unlike the previous approach which utilizes independent embeddings for the data and labels and requires us to determine their relationship, this method gives us a ready-made compatibility function that works reasonably well without any task-specific training. See the code snippet below which demonstrates how easily this can be done with 🤗 Transformers.</p>
 
 </div>
@@ -426,33 +430,67 @@ $$<p>This procedure can be thought of as a kind of dimensionality reduction. As 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Setting:-I-have-sufficient-data-for-some-labels,-but-not-for-others">Setting: I have sufficient data for some labels, but not for others<a class="anchor-link" href="#Setting:-I-have-sufficient-data-for-some-labels,-but-not-for-others"> </a></h2><p><code>short description</code></p>
-<p><code>methods</code></p>
+<h2 id="Classification-as-a-cloze-task">Classification as a cloze task<a class="anchor-link" href="#Classification-as-a-cloze-task"> </a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>One in-the-works approach to keep your eye on is a preprint on Pattern-Exploiting Training (PET) from <a href="https://arxiv.org/abs/2001.07676">Schick et al.</a>. In this paper, the authors reformulate text classification as a cloze task. A cloze question considers a sequence which is partially masked and requires predicting the missing value(s) from the context. PET requires a human practitioner to construct several task-appropriate cloze-style templates which, in the case of topic classification, could look something like the following:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Setting:-I-have-a-little-bit-of-annotated-data">Setting: I have a little bit of annotated data<a class="anchor-link" href="#Setting:-I-have-a-little-bit-of-annotated-data"> </a></h2><p><code>short description</code></p>
-<p><code>methods</code></p>
-<p><code>additional reading</code></p>
+<p><img src="https://joeddav.github.io/blog/images/zsl/cloze.png" alt="cloze examples" title="examples of cloze templates for topic classification. a and b are the question and answers in the case of Yahoo Answers and ____ is the class name which the model must predict." /></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Setting:-I-have-no-annotated-data,-but-lots-of-unlabeled-data">Setting: I have no annotated data, but lots of unlabeled data<a class="anchor-link" href="#Setting:-I-have-no-annotated-data,-but-lots-of-unlabeled-data"> </a></h3><p><code>description here</code></p>
-<p><code>methods</code></p>
-<p><code>additional reading</code></p>
+<p>A pre-trained masked language model is then tasked with choosing the most likely value for the masked (blank) word from among the possible class names.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Setting:-Low-Resource-Languages">Setting: Low-Resource Languages<a class="anchor-link" href="#Setting:-Low-Resource-Languages"> </a></h2>
+<p>Rather than simply taking the aggregated values from this procedure as final predictions, the authors introduce a fresh classifier which is trained on the softened proxy labels generated in the previous step. My intuition is that this step is effective because it allows us to do inference over the whole test set collectively, allowing the model to learn from the set over which it is predicting rather than treating each test point independently. Though I'm ignorant of any research testing this hypothesis, I suspect that this step would be particularly helpful when adapting to novel domains which do not resemble the MLM's training corpus.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Though not discussed in the most recent version of their preprint, in their <a href="https://github.com/timoschick/pet">GitHub repo</a> the authors go one step further and mention an iterative self-training procedure on top of PET which reports an impressive accuracy of $70.7\%$ on Yahoo Answers, which nearly approaches the performance of state-of-the-art supervised classification methods.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Method pros:</p>
+<ul>
+<li>Strong empirical performance</li>
+<li>Distilation step allows learning from unlabeled task-specific data</li>
+<li>Well-tested in few-shot setting</li>
+<li>Any masked language model can be used out of the box</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Requires manual construction of multiple task-appropriate cloze templates</li>
+<li>Class names can only consist of one token</li>
+<li>Computationally considerations: each instance requires several forward passes through a large MLM and a fresh classifier must then be trained from scratch</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="On-low-resource-languages">On low-resource languages<a class="anchor-link" href="#On-low-resource-languages"> </a></h2>
 </div>
 </div>
 </div>
