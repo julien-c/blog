@@ -3,19 +3,19 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="shortcut icon" type="image/x-icon" href="/blog/assets/icons/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>Accessible Zero-Shot Classification in Modern NLP | Joe Davison</title>
+<title>Zero-Shot Learning in Modern NLP | Joe Davison</title>
 <meta name="generator" content="Jekyll v3.8.5" />
-<meta property="og:title" content="Accessible Zero-Shot Classification in Modern NLP" />
+<meta property="og:title" content="Zero-Shot Learning in Modern NLP" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Just a simple fastpages site for publishing things here and there" />
-<meta property="og:description" content="Just a simple fastpages site for publishing things here and there" />
+<meta name="description" content="State-of-the-art NLP models for text classification without annotated data" />
+<meta property="og:description" content="State-of-the-art NLP models for text classification without annotated data" />
 <link rel="canonical" href="https://joeddav.github.io/blog/2020/05/28/ZSL_Blog_Post.html" />
 <meta property="og:url" content="https://joeddav.github.io/blog/2020/05/28/ZSL_Blog_Post.html" />
 <meta property="og:site_name" content="Joe Davison" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2020-05-28T00:00:00-05:00" />
 <script type="application/ld+json">
-{"url":"https://joeddav.github.io/blog/2020/05/28/ZSL_Blog_Post.html","@type":"BlogPosting","headline":"Accessible Zero-Shot Classification in Modern NLP","dateModified":"2020-05-28T00:00:00-05:00","datePublished":"2020-05-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://joeddav.github.io/blog/2020/05/28/ZSL_Blog_Post.html"},"description":"Just a simple fastpages site for publishing things here and there","@context":"https://schema.org"}</script>
+{"url":"https://joeddav.github.io/blog/2020/05/28/ZSL_Blog_Post.html","@type":"BlogPosting","headline":"Zero-Shot Learning in Modern NLP","dateModified":"2020-05-28T00:00:00-05:00","datePublished":"2020-05-28T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://joeddav.github.io/blog/2020/05/28/ZSL_Blog_Post.html"},"description":"State-of-the-art NLP models for text classification without annotated data","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
   <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
@@ -90,13 +90,13 @@
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">Accessible Zero-Shot Classification in Modern NLP</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-05-28T00:00:00-05:00" itemprop="datePublished">
+    <h1 class="post-title p-name" itemprop="name headline">Zero-Shot Learning in Modern NLP</h1><p class="page-description">State-of-the-art NLP models for text classification without annotated data</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-05-28T00:00:00-05:00" itemprop="datePublished">
         May 28, 2020
       </time>
        • <span class="read-time" title="Estimated read time">
     
     
-      13 min read
+      14 min read
     
 </span></p>
 
@@ -136,7 +136,15 @@
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Natural language processing is an enthrallingly exciting field right now. In recent years, the community has begun to figure out some pretty effective methods of learning from the enormous amounts of unlabeled data on the internet. The success of transfer learning from unsupervised models has allowed us to surpass virtually all existing benchmarks on downstream supervised learning tasks. As we continue to develop new model architectures and unsupervised learning objectives, "state of the art" continues to be a rapidly moving target for many tasks where large amounts of labeled data are available.</p>
+<blockquote><p>Check out our live <a href="https://huggingface.co/zero-shot/">zero-shot topic classification demo here</a>.</p>
+</blockquote>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Natural language processing is a very exciting field right now. In recent years, the community has begun to figure out some pretty effective methods of learning from the enormous amounts of unlabeled data on the internet. The success of transfer learning from unsupervised models has allowed us to surpass virtually all existing benchmarks on downstream supervised learning tasks. As we continue to develop new model architectures and unsupervised learning objectives, "state of the art" continues to be a rapidly moving target for many tasks where large amounts of labeled data are available.</p>
 
 </div>
 </div>
@@ -157,7 +165,7 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>However, models of this size remain impractical for real-world use as they require partitioning across dozens of GPUs to even fit in memory. In many real-world settings, annotated data is either scarse or unavailable entirely. Models much smaller than GPT-3 such as BERT have still been shown to encode a tremendous amount of information in their weights. It therefore seems that we should be able to figure out ways to use these models on downstream tasks without such a strong reliance on task-specific annotated data.</p>
+<p>However, models of this size remain impractical for real-world use as they require partitioning across dozens of GPUs to even fit in memory. In many real-world settings, annotated data is either scarse or unavailable entirely. Models much smaller than GPT-3 such as BERT have still been shown to encode a tremendous amount of information in their weights (<a href="https://arxiv.org/abs/1909.01066">Petroni et al. 2019</a>). It seems like if we were smart about it, we would be able to figure out some techniques for use these models on downstream tasks in a way that takes advantage of this latent information without the need for so much task-specific annotated data.</p>
 
 </div>
 </div>
@@ -171,35 +179,22 @@
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Background:-Natural-Language-Inference-(NLI)">Background: Natural Language Inference (NLI)<a class="anchor-link" href="#Background:-Natural-Language-Inference-(NLI)"> </a></h4><p>Several of the methods described below use Natural Language Inference as a pre-training step, so here is a quick review. NLI considers two sentences: a "premise" and a "hypothesis". The task is to determine whether the hypothesis is true (entailment) or false (contradiction) given the premise.</p>
+<h2 id="What-is-zero-shot-learning?">What is zero-shot learning?<a class="anchor-link" href="#What-is-zero-shot-learning?"> </a></h2><p>Traditionally, zero-shot learning (ZSL) referred to a fairly specific type of task: learn a classifier on one set of labels and then evaluate on a different set of labels that the clasisfier has never seen before. Recently, especially in NLP, it's been used much more broadly to mean <em>get a model to do something that it wasn't explicitly trained to do.</em> A well-known example of this is in the <a href="https://pdfs.semanticscholar.org/9405/cc0d6169988371b2755e573cc28650d14dfe.pdf">GPT-2 paper</a> where the authors evaluate a language model on downstream tasks like machine translation without fine-tuning on these tasks directly.</p>
+<p>The definition is not all that important, but it is useful to understand that the term is used in various ways and that we should therefore take care to understand the experimental setting when comparing different methods. For example, traditional zero-shot learning requires providing some kind of descriptor (<a href="http://proceedings.mlr.press/v37/romera-paredes15.pdf">Romera-Paredes et al. 2015</a>) for an unseen class (such as a set of visual attributes or simply the class name) in order for a model to be able to predict that class without training data. Understanding that different methods may adopt different rules for what kind of class descriptors are allowed provides relevant context to zero- or few-shot learning experimental results.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="https://joeddav.github.io/blog/images/zsl/nli-examples.png" alt="example NLI sentences" title="Examples from http://nlpprogress.com/english/natural_language_inference.html" /></p>
+<h2 id="A-latent-embedding-approach">A latent embedding approach<a class="anchor-link" href="#A-latent-embedding-approach"> </a></h2><p>A common approach to zero shot learning in the computer vision setting is to use an existing featurizer to embed an image and any possible class names into their corresponding latent representations (e.g. <a href="https://arxiv.org/abs/1301.3666">Socher et al. 2013</a>). They can then take some training set and use only a subset of the available labels to learn a linear projection to align the image and label embeddings. At test time, this framework allows one to embed any label (seen or unseen) and any image into the same latent space and measure their distance.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>When using transformer architectures like BERT, NLI datasets are typically modeled via <em>sequence-pair classification</em>. That is, we feed both the premise and the hypothesis through the model together as distinct segments and learn a classification head predicting one of <code>[contradiction, neutral, entailment]</code>.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="A-latent-embedding-approach">A latent embedding approach<a class="anchor-link" href="#A-latent-embedding-approach"> </a></h2><p>A common approach to zero shot learning in the computer vision setting is to use an existing featurizer to embed an image and any possible class names into their corresponding latent representations. They can then take some training set and use only a subset of the available labels to learn a linear projection to align the image and label embeddings. At test time, this framework allows one to embed any label (seen or unseen) and any image into the same latent space and measure their distance.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>In the text domain, we have the advantage that we can trivially use a single model to embed both the data and the class names into the same space, eliminating the need for the data-hungry alignment step. This is not a new technique – researchers and practitioners have used pooled word vectors in similar ways for some time. But recently we have seen a dramatic increase in the quality of sentence embedding models. We therefore decided to run some experiments with Sentence-BERT, a recent technique which fine-tunes the pooled sequence representations for increased semantic richness, as a method for obtaining sequence and label embeddings.</p>
+<p>In the text domain, we have the advantage that we can trivially use a single model to embed both the data and the class names into the same space, eliminating the need for the data-hungry alignment step. This is not a new technique – researchers and practitioners have used pooled word vectors in similar ways for some time (<a href="https://www.elen.ucl.ac.be/Proceedings/esann/esannpdf/es2016-174.pdf">Veeranna et al. 2016</a>). But recently we have seen a dramatic increase in the quality of sentence embedding models. We therefore decided to run some experiments with Sentence-BERT, a recent technique which fine-tunes the pooled sequence representations for increased semantic richness, as a method for obtaining sequence and label embeddings.</p>
 
 </div>
 </div>
@@ -354,7 +349,34 @@ $$<p>This is equivalent to Bayesian linear regression with a Gaussian prior on t
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Classification-as-Natural-Language-Inference">Classification as Natural Language Inference<a class="anchor-link" href="#Classification-as-Natural-Language-Inference"> </a></h2><p>We will now explore a method which not only embeds sequences and labels into the same latent space where their distance can be measured, but that can actually tell us something about the compatibility of two distinct sequences out of the box.</p>
-<p>The approach, proposed by <a href="https://arxiv.org/abs/1909.00161">Yin et al. (2019)</a> uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well. The idea is to take the sequence we're interested in labeling as the "premise" and to turn each candidate label into a "hypothesis." If the NLI model predicts that the premise "entails" the hypothesis, we take the label to be true. See the code snippet below which demonstrates how easily this can be done with 🤗 Transformers.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Background:-Natural-Language-Inference-(NLI)">Background: Natural Language Inference (NLI)<a class="anchor-link" href="#Background:-Natural-Language-Inference-(NLI)"> </a></h4><p>As a quick review, NLI considers two sentences: a "premise" and a "hypothesis". The task is to determine whether the hypothesis is true (entailment) or false (contradiction) given the premise.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="https://joeddav.github.io/blog/images/zsl/nli-examples.png" alt="example NLI sentences" title="Examples from http://nlpprogress.com/english/natural_language_inference.html" /></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>When using transformer architectures like BERT, NLI datasets are typically modeled via <em>sequence-pair classification</em>. That is, we feed both the premise and the hypothesis through the model together as distinct segments and learn a classification head predicting one of <code>[contradiction, neutral, entailment]</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The approach, proposed by <a href="https://arxiv.org/abs/1909.00161">Yin et al. (2019)</a>, uses a pre-trained MNLI sequence-pair classifier as an out-of-the-box zero-shot text classifier that actually works pretty well. The idea is to take the sequence we're interested in labeling as the "premise" and to turn each candidate label into a "hypothesis." If the NLI model predicts that the premise "entails" the hypothesis, we take the label to be true. See the code snippet below which demonstrates how easily this can be done with 🤗 Transformers.</p>
 
 </div>
 </div>
@@ -482,19 +504,14 @@ $$<p>This is equivalent to Bayesian linear regression with a Gaussian prior on t
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Method pros:</p>
-<ul>
-<li>Strong empirical performance</li>
-<li>Distilation step allows learning from unlabeled task-specific data</li>
-<li>Well-tested in few-shot setting</li>
-<li>Any masked language model can be used out of the box</li>
-</ul>
-<p>Cons:</p>
-<ul>
-<li>Requires manual construction of multiple task-appropriate cloze templates</li>
-<li>Class names can only consist of one token</li>
-<li>Computational considerations: each instance requires several forward passes through a large MLM and a fresh classifier must then be trained from scratch</li>
-</ul>
+<p>This brings me back to my earlier point about considering experimental parameters when comparing different methods. Although PET significantly outperforms the other methods described here, it also makes use of data which the other approaches do not assume access to: multiple task-specific, hand-crafted cloze sentences and a large set of unlabeled data for the distilation/self-learning step. I say this not to knock PET by any means, but simply to emphasize the importance of taking care in comparing different methods which can all be considered, in some sense, "zero-shot".</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="When-some-annotated-data-is-available">When some annotated data is available<a class="anchor-link" href="#When-some-annotated-data-is-available"> </a></h4><p>The authors present a well-developed method for using PET in the case where some training data is available, effectively learning a joint loss between optimizing cloze predictions for any available training data and the standard MLM loss. The details are somewhat inovlved, so if you're interested I highly recommend checking out their <a href="https://arxiv.org/abs/2001.07676">preprint</a>, <a href="https://www.youtube.com/watch?v=01jRE9noSWw">YouTube tutorial</a>, or <a href="https://github.com/timoschick/pet">GitHub repo</a>.</p>
 
 </div>
 </div>
@@ -507,7 +524,7 @@ $$<p>This is equivalent to Bayesian linear regression with a Gaussian prior on t
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>One extremely important data-scarse setting in NLP is in low-resource languages. Fortunately, it's a very active research area and much has been written about it. I will therefore direct the reader to Graham Neubig's recently released <a href="https://github.com/neubig/lowresource-nlp-bootcamp-2020">Low Resource NLP Bootcamp</a>. This is a fantastic resource in the form of a GitHub repo containing 8 lectures (plus exercises) focused on NLP in data-scarse languages. Additionally, check out Sebastian Ruder's writing including, <a href="https://ruder.io/cross-lingual-embeddings/">"A survey of cross-lingual word embedding models"</a></p>
+<p>One extremely important data-scarse setting in NLP is in low-resource languages. Fortunately, it's a very active research area and much has been written about it. For those interested in this area, I'd highly recommend checking Graham Neubig's recently released <a href="https://github.com/neubig/lowresource-nlp-bootcamp-2020">Low Resource NLP Bootcamp</a>. This is a fantastic resource in the form of a GitHub repo containing 8 lectures (plus exercises) focused on NLP in data-scarse languages. Additionally, I'd recommend check out Sebastian Ruder's writings including, <a href="https://ruder.io/cross-lingual-embeddings/">"A survey of cross-lingual word embedding models"</a>.</p>
 
 </div>
 </div>
